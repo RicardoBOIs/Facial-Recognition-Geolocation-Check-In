@@ -10,6 +10,7 @@ A comprehensive web application that demonstrates a location-based check-in syst
 - **Persistent Storage**: Logs all check-in events with user ID, location data, and timestamps
 - **Full-Stack Integration**: Seamless integration between web frontend, Node.js backend, and Python ML service
 
+Link to the Facial Recognition Model:https://drive.google.com/file/d/1C665jlWP7ll6q3A3ps5vVmtHSJrUF-1n/view?usp=sharing
 ## 🛠️ Tech Stack
 
 ### Frontend
