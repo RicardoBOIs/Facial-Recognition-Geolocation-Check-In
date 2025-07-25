@@ -1,55 +1,55 @@
-Full-Stack Facial Recognition & Geolocation Check-In System
-This is a full-stack web application that demonstrates a location-based check-in system using facial recognition. The application allows a user to "check in" from a browser; it captures their image and current geographic location, identifies the user via a machine learning model, and logs the event in a database.
+# Full-Stack Facial Recognition & Geolocation Check-In System
 
-Features
-Real-time Facial Recognition: Identifies users from a live webcam feed.
+A comprehensive web application that demonstrates a location-based check-in system using facial recognition technology. Users can check in from their browser by capturing their image and current geographic location, with automatic user identification through machine learning and persistent logging in a database.
 
-Geolocation Tracking: Captures the user's precise latitude and longitude.
+## 🚀 Features
 
-Address Reverse-Geocoding: Converts coordinates into a human-readable street address.
+- **Real-time Facial Recognition**: Identifies users from live webcam feed using pre-trained ResNet-50 model
+- **Geolocation Tracking**: Captures precise latitude and longitude coordinates
+- **Address Reverse-Geocoding**: Converts GPS coordinates into human-readable street addresses
+- **Persistent Storage**: Logs all check-in events with user ID, location data, and timestamps
+- **Full-Stack Integration**: Seamless integration between web frontend, Node.js backend, and Python ML service
 
-Persistent Storage: Logs all check-in events with user ID, location, and timestamp in an Oracle Database.
+## 🛠️ Tech Stack
 
-Full-Stack Integration: Demonstrates a cohesive system combining a web front-end, a Node.js back-end, and a Python machine learning service.
+### Frontend
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- Webcam API (MediaDevices)
+- Geolocation API
 
-Tech Stack
-Front-End:
+### Backend
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: Oracle Database
+- **Dependencies**: 
+  - `oracledb` - Oracle database connectivity
+  - `cors` - Cross-origin resource sharing
+  - `body-parser` - Request body parsing
+  - `dotenv` - Environment variable management
 
-HTML5
+### Machine Learning
+- **Language**: Python
+- **Libraries**: 
+  - PyTorch - Deep learning framework
+  - Pillow (PIL) - Image processing
+  - NumPy - Numerical computations
+- **Model**: Pre-trained ResNet-50 for facial recognition
 
-CSS3
+## 🏗️ System Architecture
 
-Vanilla JavaScript
+The application uses a decoupled architecture with clear separation of concerns:
 
-Webcam API
+```
+[Browser Client] → [Node.js API Server] → [Python ML Service] → [Oracle Database]
+```
 
-Geolocation API
+### Data Flow
+1. **Client Interaction**: User initiates check-in from the web interface
+2. **Data Capture**: Browser captures webcam image and GPS coordinates
+3. **API Request**: Frontend sends base64-encoded image data to Node.js server
+4. **ML Processing**: Node.js spawns Python child process for facial recognition
+5. **User Identification**: Python script processes image using ResNet-50 model
+6. **Database Logging**: Server stores check-in record with user ID, location, and timestamp
 
-Back-End:
-
-Runtime: Node.js
-
-Framework: Express.js
-
-Database: Oracle Database
-
-Dependencies: oracledb, cors, body-parser, dotenv
-
-Machine Learning:
-
-Language: Python
-
-Core Libraries: PyTorch, Pillow (PIL), NumPy
-
-Model: Pre-trained ResNet-50
-
-System Architecture
-The application operates with a decoupled architecture, ensuring a clear separation of concerns between the client, the server, and the machine learning model.
-
-Client (Front-End): The user initiates a check-in from the Side Project.html page. The browser captures a video frame and the user's GPS coordinates.
-
-API Server (Node.js): The front-end sends the image data (as base64) to the Node.js server (server.js).
-
-Python ML Service: The Node.js server spawns a child_process to run the local_classifier.py script, passing the image data to it. The Python script loads the pre-trained ResNet-50 model, classifies the face, and returns the user's ID.
-
-Database: Once the user ID is received from the Python script, the Node.js server connects to the Oracle Database and inserts a new record containing the user ID, location data, and a timestamp.
