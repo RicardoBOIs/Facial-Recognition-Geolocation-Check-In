@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Check In</title>
+    <script type="text/javascript" src="https://unpkg.com/webcam-easy@1.1.1/dist/webcam-easy.min.js"></script>
+    <link rel="stylesheet" href="stylesheet.css">
+</head>
+<body>
+    <h1 style="text-align: center;">Location Check In</h1>
+    <video id="webCam" autoplay playsinline width="800" height="600"></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <button id="checkInButton">Check In</button>
+    <div id="address"></div>
+    <div id="time"></div>
+    <script>
+        
+        const webCamElement = document.getElementById("webCam");
+        const canvasElement = document.getElementById("canvas");
+        const webcam = new Webcam(webCamElement, "user");
+        webcam.start();
+
+        async function getCurrentPosition() {
+            return new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                    pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                    err => reject(err),
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            });
+        }
+
+        async function getAddress(latitude, longitude) {
+            const url = `https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=6677fac8cd1b5228630611muyf636d9`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                return data.display_name || "Address not found";
+            } catch (error) {
+                console.error('Error fetching address:', error);
+                return null;
+            }
+        }
+
+    async function takePic() {
+    canvasElement.width = webCamElement.videoWidth;
+    canvasElement.height = webCamElement.videoHeight;
+    const context = canvasElement.getContext('2d');
+    const coords = await getCurrentPosition();
+
+    // Draw the current video frame on the canvas
+    context.drawImage(webCamElement, 0, 0, canvasElement.width, canvasElement.height);
+    const pictureBase64 = canvasElement.toDataURL("image/png").split(",")[1];
+    console.log('Captured Image:', pictureBase64);
+
+    if (!coords) return;
+
+    // Get address based on coordinates
+    const address = await getAddress(coords.latitude, coords.longitude);
+    document.getElementById("address").innerText = address;
+
+    try {
+        // Send the image to the server for classification
+        const classificationResponse = await fetch('http://localhost:3000/checkin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ image: pictureBase64 }),
+        });
+
+        const classificationData = await classificationResponse.json();
+        console.log('Server response:', classificationData);
+
+        // Check if the classification was successful
+        if (classificationResponse.ok) {
+            const user_id = classificationData.user_id; // Extract user_id from the response
+
+            // Proceed to store the check-in data
+            const storeResponse = await fetch('http://localhost:3001/storeCheckin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: user_id, // Include user_id for storing
+                    latitude: coords.latitude,
+                    longitude: coords.longitude,
+                    address: address
+                })
+            });
+
+            if (storeResponse.ok) {
+                const storeData = await storeResponse.json();
+                console.log('Check-in stored with ID:', storeData.id);
+                loadCheckInHistory(); // Load the check-in history
+            } else {
+                console.error('Failed to store check-in');
+            }
+        } else {
+            console.error('Classification failed:', classificationData.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+        async function loadCheckInHistory() {
+            try {
+                const response = await fetch('http://localhost:3001/checkins');
+                if (response.ok) {
+                    const checkins = await response.json();
+                    displayHistory(checkins);
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        function displayHistory(checkins) {
+            console.log(checkins); // Log history for now
+        }
+
+         // Function to start the webcam
+         async function startWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                webCamElement.srcObject = stream;
+                console.log("Webcam started successfully");
+            } catch (err) {
+                console.error("Webcam failed to start", err);
+                alert("Failed to access the webcam. Please check permissions.");
+            }
+        }
+
+
+        document.getElementById('checkInButton').addEventListener('click', takePic);
+
+        document.getElementById('checkInButton').addEventListener('click', () => {
+            startWebcam();
+            takePic()
+        });
+
+        function getNow() {
+            let today = new Date();
+            let month = today.getMonth() + 1;
+            let date = today.getDate();
+            let year = today.getFullYear();
+            let minutes = today.getMinutes();
+            let hours = today.getHours();
+            let currentTime = `${date}/${month}/${year} ${hours}:${minutes}`;
+            document.getElementById('time').innerText = currentTime;
+            return currentTime;
+        }
+
+        getNow();
+    </script>
+    <style>
+        #address, #time {
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+    </style>
+</body>
+</html>
